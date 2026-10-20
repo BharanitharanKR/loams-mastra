@@ -3,14 +3,13 @@
 Run [Mastra](https://mastra.ai) workflows durably on any [Resonate](https://resonatehq.io) server.
 
 Resonate is an open-source (Apache-2.0) durable execution engine built on the
-[Durable Promises](https://github.com/resonatehq/durable-promises) specification. This
+[Durable Promises](https://github.com/resonatehq/durable-promise-specification) specification. This
 package is a Mastra execution engine for it, laid out like Mastra's own
 `workflows/inngest` so that it can move upstream as `@mastra/resonate`. It is tested
 against the upstream Resonate server and against [Loams](https://github.com/ostrium-labs/loams)
 Durable, which embeds the same server.
 
-Status: in development (plan MA1, Tasks 13–20). This README is the design the following
-tasks implement; until then the exported classes are skeletons. Not published to npm.
+Status: preview. Not published to npm yet.
 
 ## Usage
 
