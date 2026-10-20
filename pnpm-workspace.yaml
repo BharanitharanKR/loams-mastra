@@ -1,0 +1,18 @@
+packages:
+  - packages/*
+  - examples/*
+  - templates/*
+  - test/conformance
+  - test/conformance/upstream/*/*
+  - test/resonate
+  - scripts
+
+# Supply chain (design §66 §11.2; the 2026-06 @mastra/* npm compromise):
+# exact versions, and no third-party release younger than three days.
+saveExact: true
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - '@loams/*'
+
+# Dependency lifecycle scripts are blocked unless allowed here (pnpm 11, MA-R0.6).
+allowBuilds: {}
