@@ -287,6 +287,35 @@ export class ResonateExecutionEngine extends DefaultExecutionEngine {
     }
   }
 
+  /** The run's suspended paths, kept to order the result's `suspended` list. */
+  #suspendedPaths: Record<string, number[]> = {};
+
+  override applyMutableContext(
+    executionContext: ExecutionContext,
+    mutableContext: Parameters<DefaultExecutionEngine['applyMutableContext']>[1],
+  ): void {
+    super.applyMutableContext(executionContext, mutableContext);
+    this.#suspendedPaths = executionContext.suspendedPaths;
+  }
+
+  /**
+   * Concurrent branches finish in network order, and core lists suspended steps in
+   * the order their results arrived. Order them by execution path (graph order)
+   * instead, which is what the default engine, finishing them in-process, produces.
+   */
+  protected override async fmtReturnValue<TOutput>(
+    ...args: Parameters<DefaultExecutionEngine['fmtReturnValue']>
+  ): Promise<TOutput> {
+    const result = (await super.fmtReturnValue(...args)) as { suspended?: string[][] };
+    const paths = this.#suspendedPaths;
+    if (Array.isArray(result?.suspended) && result.suspended.length > 1) {
+      result.suspended = [...result.suspended].sort((a, b) =>
+        comparePaths(paths[a[0] ?? ''], paths[b[0] ?? '']),
+      );
+    }
+    return result as TOutput;
+  }
+
   // Step executions: one child context each, so that concurrent branches
   // (parallel, conditional, foreach) never interleave durable operations.
 
@@ -556,6 +585,14 @@ export class ResonateExecutionEngine extends DefaultExecutionEngine {
       resumePayload: isResume ? resume?.resumePayload : undefined,
     } as StepResult<any, any, any, any>;
   }
+}
+
+function comparePaths(a: number[] = [], b: number[] = []): number {
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    const d = (a[i] ?? 0) - (b[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return a.length - b.length;
 }
 
 function entryId(
