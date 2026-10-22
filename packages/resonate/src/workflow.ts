@@ -474,7 +474,13 @@ export class ResonateWorkflow<
             serializedStepGraph: this.serializedStepGraph,
             suspendedPaths: existing?.suspendedPaths ?? {},
             waitingPaths: {},
-            resumeLabels: existing?.resumeLabels ?? (result as any).resumeLabels ?? {},
+            // A resume pass starts with no labels of its own, so its result carries only the
+            // labels it produced: merge them over the ones an earlier suspension persisted
+            // instead of letting the older map hide the newer labels.
+            resumeLabels: {
+              ...existing?.resumeLabels,
+              ...(result as any).resumeLabels,
+            },
             result:
               result.status === 'success'
                 ? (result.result as WorkflowRunState['result'])
