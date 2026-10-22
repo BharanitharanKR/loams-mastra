@@ -18,12 +18,6 @@
     "since": "2026-10-20"
   },
   {
-    "test": "Workflow (Resonate engine, loams) > Suspend and Resume > should pass correct inputData to branch condition when resuming after map",
-    "reason": "resumes through a rebuilt workflow that is not registered with Mastra, so there is no storage to resume from",
-    "issue": "https://github.com/ostrium-labs/loams-mastra/issues/30",
-    "since": "2026-10-20"
-  },
-  {
     "test": "Workflow (Resonate engine, loams) > restart > should restart a completed workflow execution",
     "reason": "run.restart() is not supported yet",
     "issue": "https://github.com/ostrium-labs/loams-mastra/issues/32",
