@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit is this repository's PR reviewer. Greptile's config (.greptile/) sets
+# autoReview to [], so a PR never gets both. See CONTRIBUTING.md, "Code review".
+language: en-US
+tone_instructions: "Be direct and specific. Prefer one concrete suggestion over several vague ones. Skip praise."
+reviews:
+  profile: chill
+  poem: false
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!pnpm-lock.yaml"
+    - "!test/conformance/upstream/**"
+    - "!COMPATIBILITY.md"
+    - "!**/CHANGELOG.md"
+  path_instructions:
+    - path: "{packages,templates,examples}/**"
+      instructions: |
+        Check correctness against Mastra's interfaces first: no floating promises or swallowed errors, bounded
+        retries and polling, strict types. Never suggest code from Mastra ee/ paths, packages/connect/src/providers
+        or Elastic-2.0 code. @mastra/* versions stay pinned exactly. No public endpoints in examples or tests.
+        Skip formatting nits; Biome runs in CI.
+chat:
+  auto_reply: true
