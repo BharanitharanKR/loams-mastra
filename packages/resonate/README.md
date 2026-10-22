@@ -140,6 +140,7 @@ JSON-serialisable, as with any durable engine.
 | Resume from outside Mastra | by sending the resume event | by settling the run's resume promise from any Resonate client |
 | A second, concurrent resume of one suspension | not checked | refused |
 | Nested resume | skipped in Mastra's suite (`resumeNested`) | yes |
+| Resume one foreach iteration (`forEachIndex`, or its label) | skipped in Mastra's suite (`resumeForeachIndex`, `resumeForeachLabel`) | yes |
 | `cancel` | yes (`cancelOn`) | yes (cancels the durable promises) |
 | `stream`, `watch` | yes (Inngest realtime) | yes (Mastra PubSub) |
 | `onStart`, `onFinish`, `onError` | `onFinish` and `onError` in its finalize step | all three |
@@ -154,10 +155,10 @@ JSON-serialisable, as with any durable engine.
 ## Limits
 
 - Time travel and `restart` throw "not supported yet".
-- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 259 of 290
+- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 262 of 290
   tests pass on both backends. The other failures are listed with their issues in
-  `test/conformance/expected-failures/resonate-*.json`: resuming one foreach iteration by
-  index or label, resuming through a workflow rebuilt without Mastra, and `restart()`.
+  `test/conformance/expected-failures/resonate-*.json`: resuming through a workflow
+  rebuilt without Mastra, and `restart()`.
   One test, suspend and resume through `streamLegacy`, is skipped because it hangs.
 - Control-flow container spans (parallel, conditional, loop, foreach) are created outside
   memoised operations and can be exported again when a pass replays.

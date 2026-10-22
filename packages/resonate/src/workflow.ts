@@ -518,10 +518,11 @@ export class ResonateWorkflow<
   /**
    * Turns a resume into the engine's resume parameters, from the run's
    * snapshot: the step path (label, step or the only suspended step), the
-   * validated resume data, the request context (snapshot values, overridden by
-   * the request's), and the state and step results to resume from. Runs once per
-   * pass, memoised. A request that cannot resume the run is rejected without
-   * executing anything.
+   * foreach iteration to resume (`forEachIndex`, or the iteration a label was
+   * suspended with), the validated resume data, the request context (snapshot
+   * values, overridden by the request's), and the state and step results to
+   * resume from. Runs once per pass, memoised. A request that cannot resume the
+   * run is rejected without executing anything.
    */
   async #prepareResume(payload: InvocationPayload): Promise<
     | {
@@ -626,6 +627,13 @@ export class ResonateWorkflow<
         } as any,
       });
 
+    // As in core's Run._resume: an explicit index wins, else a label suspended by a
+    // foreach iteration resumes that iteration alone. Without either, the foreach
+    // resumes every suspended iteration.
+    const forEachIndex =
+      request?.forEachIndex ??
+      (request?.label ? snapshot.resumeLabels?.[request.label]?.foreachIndex : undefined);
+
     return {
       resume: {
         steps,
@@ -634,7 +642,7 @@ export class ResonateWorkflow<
         stepExecutionPath: (snapshot as { stepExecutionPath?: string[] }).stepExecutionPath,
         resumePath: (payload.resume?.resumePath ??
           snapshot.suspendedPaths?.[steps[0] ?? '']) as number[],
-        ...(request?.forEachIndex !== undefined ? { forEachIndex: request.forEachIndex } : {}),
+        ...(forEachIndex !== undefined ? { forEachIndex } : {}),
         ...(request?.label ? { label: request.label } : {}),
       },
       state: snapshot.value,
