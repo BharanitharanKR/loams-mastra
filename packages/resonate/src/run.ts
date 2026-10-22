@@ -3,7 +3,7 @@ import { getErrorFromUnknown, MastraError } from '@mastra/core/error';
 import type { Mastra } from '@mastra/core/mastra';
 import { MASTRA_AUTH_TOKEN_KEY, RequestContext } from '@mastra/core/request-context';
 import type { WorkflowResult } from '@mastra/core/workflows';
-import { hydrateSerializedStepErrors, Run } from '@mastra/core/workflows';
+import { hydrateSerializedStepErrors, Run, waitForSuspendedSnapshot } from '@mastra/core/workflows';
 import { Codec } from '@resonatehq/sdk';
 import type { Resonate, ResonateHandle } from '@resonatehq/sdk/async';
 import { decodeError, decodeValue, encodeValue } from './codec';
@@ -279,7 +279,8 @@ export class ResonateRun<
    * Resumes a suspended run by settling its resume promise with a
    * {@link ResumeRequest}, then waits for the pass that the settlement starts.
    * The promise settles once: a concurrent resume of the same suspension is
-   * refused.
+   * refused. As in core's Run, a stream left open by the suspension
+   * (`streamLegacy`) is closed when the resumed run ends.
    */
   protected override async _resume(params: {
     resumeData?: unknown;
@@ -290,15 +291,17 @@ export class ResonateRun<
     forEachIndex?: number;
     perStep?: boolean;
     actor?: unknown;
+    /** Set by `resumeStream()`, which closes its own stream. */
+    isVNext?: boolean;
   }): Promise<WorkflowResult<TState, TInput, TOutput, any>> {
     const workflowsStore = await this.#mastra?.getStorage()?.getStore('workflows');
     if (!workflowsStore) {
       throw new Error(`Workflow storage is required to resume run ${this.runId}`);
     }
-    const snapshot = await workflowsStore.loadWorkflowSnapshot({
-      workflowName: this.workflowId,
-      runId: this.runId,
-    });
+    // A step's suspended event is published before the snapshot that records the
+    // suspension, and a caller may resume on that event (a `streamLegacy` consumer
+    // does): wait while the snapshot is still running, as core's Run does.
+    const snapshot = await waitForSuspendedSnapshot(workflowsStore, this.workflowId, this.runId);
     if (!snapshot) {
       throw new Error(`No snapshot found for this workflow run: ${this.workflowId} ${this.runId}`);
     }
@@ -339,6 +342,27 @@ export class ResonateRun<
     }
 
     this.workflowRunStatus = 'running';
+    const execution = this.#awaitResumedPass(k, params.outputOptions);
+    // As in core's Run: a legacy stream's getWorkflowState() reads the resumed result.
+    this.executionResults = execution as Promise<any>;
+    const result = await execution;
+    this.workflowRunStatus = result.status;
+    if (result.status !== 'suspended') {
+      // A legacy stream stays open while the run is suspended; core's Run closes it
+      // when a resume ends the run. resumeStream() closes its own stream.
+      if (!params.isVNext) {
+        this.closeStreamAction?.().catch(() => {});
+      }
+      this.cleanup?.();
+    }
+    return result;
+  }
+
+  /** Waits for the pass that settling resume promise `k` starts, and returns its result. */
+  async #awaitResumedPass(
+    k: number,
+    outputOptions: { includeState?: boolean } | undefined,
+  ): Promise<WorkflowResult<TState, TInput, TOutput, any>> {
     const root = await this.#resonate.get(this.rootId);
     const result = (await this.#awaitPass(root, passId(this.rootId, k + 1))) as WorkflowResult<
       TState,
@@ -352,12 +376,8 @@ export class ResonateRun<
       throw decodeError(result.resumeRejected);
     }
     hydrateFailedResult(result);
-    if (!params.outputOptions?.includeState) {
+    if (!outputOptions?.includeState) {
       delete (result as { state?: unknown }).state;
-    }
-    this.workflowRunStatus = result.status;
-    if (result.status !== 'suspended') {
-      this.cleanup?.();
     }
     return result;
   }

@@ -154,11 +154,10 @@ JSON-serialisable, as with any durable engine.
 ## Limits
 
 - Time travel and `restart` throw "not supported yet".
-- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 259 of 290
+- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 260 of 290
   tests pass on both backends. The other failures are listed with their issues in
   `test/conformance/expected-failures/resonate-*.json`: resuming one foreach iteration by
   index or label, resuming through a workflow rebuilt without Mastra, and `restart()`.
-  One test, suspend and resume through `streamLegacy`, is skipped because it hangs.
 - Control-flow container spans (parallel, conditional, loop, foreach) are created outside
   memoised operations and can be exported again when a pass replays.
 - A run's promises share one deadline (`timeout`). A resume promise that times out leaves
