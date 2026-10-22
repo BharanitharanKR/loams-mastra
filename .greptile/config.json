@@ -1,0 +1,68 @@
+{
+  "strictness": 2,
+  "commentTypes": ["logic", "syntax"],
+  "autoReview": ["open"],
+  "triggerOnDrafts": false,
+  "includeBranches": ["main"],
+  "excludeAuthors": [
+    "dependabot[bot]",
+    "nx-cloud[bot]",
+    "github-actions[bot]",
+    "release-please[bot]",
+    "renovate[bot]"
+  ],
+  "disabledLabels": ["skip-greptile"],
+  "ignorePatterns": "pnpm-lock.yaml\ntest/conformance/upstream/**\nCOMPATIBILITY.md\n.changeset/*.md\n**/CHANGELOG.md\n**/*.snap\n**/__snapshots__/**\n**/snapshots/**\n**/fixtures/**\n**/testdata/**\n**/dist/**\n**/target/**\n**/node_modules/**",
+  "instructions": "Loams for Mastra: Apache-2.0 TypeScript packages that back Mastra's storage, vector and workflow APIs with Loams, plus a Resonate workflow engine, examples and a starter template. Review for correctness against Mastra's interfaces, async error handling and security first; skip formatting and naming nits (Biome runs in CI). Comment only when you can name the concrete failure.",
+  "rules": [
+    {
+      "id": "no-secrets",
+      "severity": "high",
+      "rule": "Never print, log, commit or echo secrets: tokens, passwords, keys, connection strings with credentials or Authorization headers, including in error messages, debug output, tests and CI logs. Flag any secret in the diff."
+    },
+    {
+      "id": "mastra-licence",
+      "severity": "high",
+      "rule": "Never copy, import or suggest code from any Mastra path with an ee/ segment, from packages/connect/src/providers, or from anything under the Mastra Enterprise Edition licence or Elastic-2.0. A vendored or adapted Apache-2.0 file keeps its first-line 'Vendored from mastra-ai/mastra@<commit>:<path>' header and a NOTICE entry."
+    },
+    {
+      "id": "async-errors",
+      "severity": "high",
+      "scope": ["packages/**", "templates/**", "examples/**"],
+      "rule": "No floating promises, swallowed errors or unhandled rejections; retries and polling are bounded; cancellation and timeouts are honoured. Types stay strict: flag new any or unchecked casts that hide a real mismatch with Mastra's interfaces."
+    },
+    {
+      "id": "pinned-deps",
+      "severity": "high",
+      "rule": "Every @mastra/* package in examples, templates and test/conformance/pins.json is pinned to an exact version. Do not suggest caret ranges or unpinned upgrades; flag new dependency lifecycle scripts."
+    },
+    {
+      "id": "no-public-endpoints",
+      "severity": "medium",
+      "scope": ["examples/**", "templates/**", "test/**"],
+      "rule": "No example, template or test points at a public endpoint or a real account."
+    },
+    {
+      "id": "licence",
+      "severity": "high",
+      "rule": "No code copied from AGPL, GPL, LGPL, BSL (Business Source), FSL, SSPL or ELv2 projects, and no such dependency (Loams D11, D1574). Copied permissive code keeps its notice. Never suggest code taken from such projects."
+    },
+    {
+      "id": "ci-workflows",
+      "severity": "medium",
+      "scope": [".github/**"],
+      "rule": "Workflows keep least-privilege permissions, pin third-party actions to a full commit SHA, and never expose secrets to pull_request_target code from forks."
+    },
+    {
+      "id": "plain-docs",
+      "severity": "low",
+      "scope": ["**/*.md", "**/*.mdx"],
+      "rule": "Docs are plain English: short sentences, no marketing language, statuses not overstated. Commands, flags, paths and links must be correct. Flag only real errors, not wording preferences."
+    },
+    {
+      "id": "dco",
+      "severity": "low",
+      "rule": "Every commit needs a DCO Signed-off-by trailer (git commit -s); the DCO check enforces it, so mention it only if the PR asks contributors to skip it."
+    }
+  ]
+}
