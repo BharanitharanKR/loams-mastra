@@ -1,14 +1,9 @@
 {
   "strictness": 2,
-  "commentTypes": [
-    "logic",
-    "syntax"
-  ],
+  "commentTypes": ["logic", "syntax"],
   "autoReview": [],
   "triggerOnDrafts": false,
-  "includeBranches": [
-    "main"
-  ],
+  "includeBranches": ["main"],
   "excludeAuthors": [
     "dependabot[bot]",
     "nx-cloud[bot]",
@@ -16,9 +11,7 @@
     "release-please[bot]",
     "renovate[bot]"
   ],
-  "disabledLabels": [
-    "skip-greptile"
-  ],
+  "disabledLabels": ["skip-greptile"],
   "ignorePatterns": "pnpm-lock.yaml\ntest/conformance/upstream/**\nCOMPATIBILITY.md\n.changeset/*.md\n**/CHANGELOG.md\n**/*.snap\n**/__snapshots__/**\n**/snapshots/**\n**/fixtures/**\n**/testdata/**\n**/dist/**\n**/target/**\n**/node_modules/**",
   "instructions": "Loams for Mastra: Apache-2.0 TypeScript packages that back Mastra's storage, vector and workflow APIs with Loams, plus a Resonate workflow engine, examples and a starter template. Review for correctness against Mastra's interfaces, async error handling and security first; skip formatting and naming nits (Biome runs in CI). Comment only when you can name the concrete failure.",
   "rules": [
@@ -35,11 +28,7 @@
     {
       "id": "async-errors",
       "severity": "high",
-      "scope": [
-        "packages/**",
-        "templates/**",
-        "examples/**"
-      ],
+      "scope": ["packages/**", "templates/**", "examples/**"],
       "rule": "No floating promises, swallowed errors or unhandled rejections; retries and polling are bounded; cancellation and timeouts are honoured. Types stay strict: flag new any or unchecked casts that hide a real mismatch with Mastra's interfaces."
     },
     {
@@ -50,11 +39,7 @@
     {
       "id": "no-public-endpoints",
       "severity": "medium",
-      "scope": [
-        "examples/**",
-        "templates/**",
-        "test/**"
-      ],
+      "scope": ["examples/**", "templates/**", "test/**"],
       "rule": "No example, template or test points at a public endpoint or a real account."
     },
     {
@@ -65,18 +50,13 @@
     {
       "id": "ci-workflows",
       "severity": "medium",
-      "scope": [
-        ".github/**"
-      ],
+      "scope": [".github/**"],
       "rule": "Workflows keep least-privilege permissions, pin third-party actions to a full commit SHA, and never expose secrets to pull_request_target code from forks."
     },
     {
       "id": "plain-docs",
       "severity": "low",
-      "scope": [
-        "**/*.md",
-        "**/*.mdx"
-      ],
+      "scope": ["**/*.md", "**/*.mdx"],
       "rule": "Docs are plain English: short sentences, no marketing language, statuses not overstated. Commands, flags, paths and links must be correct. Flag only real errors, not wording preferences."
     },
     {
