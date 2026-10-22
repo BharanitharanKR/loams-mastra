@@ -145,7 +145,7 @@ JSON-serialisable, as with any durable engine.
 | `onStart`, `onFinish`, `onError` | `onFinish` and `onError` in its finalize step | all three |
 | Workflow span | memoised | memoised |
 | Time travel | yes | not yet |
-| `restart` | no | not yet |
+| `restart` | no | yes, for a run the server does not own |
 | Flow control (concurrency, rate limit, throttle, debounce, priority) | yes | no (Resonate has no equivalent) |
 | Cron schedules | yes | not yet (Resonate has schedules) |
 | Durable agents (`createInngestAgent`) | yes | not yet |
@@ -153,11 +153,13 @@ JSON-serialisable, as with any durable engine.
 
 ## Limits
 
-- Time travel and `restart` throw "not supported yet".
-- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 259 of 290
+- Time travel throws "not supported yet". `restart()` replays the run from its snapshot when the
+  durable execution is not on the server: a finished run is returned as it finished, and a run the
+  server still runs (or recovers after a crash) is refused, because a promise id is never reused.
+- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 265 of 290
   tests pass on both backends. The other failures are listed with their issues in
   `test/conformance/expected-failures/resonate-*.json`: resuming one foreach iteration by
-  index or label, resuming through a workflow rebuilt without Mastra, and `restart()`.
+  index or label, and resuming through a workflow rebuilt without Mastra.
   One test, suspend and resume through `streamLegacy`, is skipped because it hangs.
 - Control-flow container spans (parallel, conditional, loop, foreach) are created outside
   memoised operations and can be exported again when a pass replays.
