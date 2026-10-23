@@ -6,8 +6,4 @@ import type { WorkflowTestConfig } from '@loams-internal/upstream-inngest-workfl
 
 export const skip: WorkflowTestConfig['skip'] = {};
 
-export const skipTests: WorkflowTestConfig['skipTests'] = {
-  // Hangs for 120 s: the legacy stream does not close after suspend and resume
-  // (https://github.com/ostrium-labs/loams-mastra/issues/31). stream() is tested.
-  streamingSuspendResumeLegacy: true,
-};
+export const skipTests: WorkflowTestConfig['skipTests'] = {};
