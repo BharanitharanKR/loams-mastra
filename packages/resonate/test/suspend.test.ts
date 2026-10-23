@@ -1,10 +1,12 @@
+import { Mastra } from '@mastra/core/mastra';
+import { LibSQLStore } from '@mastra/libsql';
 import { Codec } from '@resonatehq/sdk';
 import { Resonate } from '@resonatehq/sdk/async';
 import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { encodeValue } from '../src/codec';
 import type { Harness } from './helpers';
-import { harness, hasServer, RESONATE_URL } from './helpers';
+import { harness, hasServer, RESONATE_URL, uniqueId } from './helpers';
 
 let h: Harness | undefined;
 afterEach(async () => {
@@ -349,5 +351,32 @@ describe.skipIf(!hasServer)('suspend and resume', () => {
     const done = await run.resume({ step: 'gate', resumeData: { approved: true } });
     expect(done.status).toBe('success');
     if (done.status === 'success') expect(done.result).toEqual({ value: 3 });
+  });
+
+  it('resumes through a workflow built again once it is registered with Mastra', async () => {
+    h = harness();
+    const storage = new LibSQLStore({ id: uniqueId('store'), url: ':memory:' });
+    const { wf } = approvalWorkflow(h);
+    new Mastra({ workflows: { wf }, storage, logger: false });
+    const run = await wf.createRun();
+    expect((await run.start({ inputData: { value: 1 } })).status).toBe('suspended');
+
+    // A restarted process builds the workflow again. Until that workflow is registered
+    // with Mastra it has no storage to read the run's snapshot from, as on the default engine.
+    const unregistered = approvalWorkflow(h).wf;
+    const early = await unregistered.createRun({ runId: run.runId });
+    const resumeEarly = () => early.resume({ step: 'approve', resumeData: { approved: true } });
+    await expect(resumeEarly()).rejects.toMatchObject({ id: 'RESONATE_ENGINE_STORAGE_REQUIRED' });
+    await expect(resumeEarly()).rejects.toThrow(/not registered with a Mastra instance/);
+
+    // Registered on the run's storage, it resumes the run, and this process runs the
+    // workflow's passes with it.
+    const { wf: rebuilt, runs } = approvalWorkflow(h);
+    new Mastra({ workflows: { wf: rebuilt }, storage, logger: false });
+    const resumed = await rebuilt.createRun({ runId: run.runId });
+    const result = await resumed.resume({ step: 'approve', resumeData: { approved: true } });
+    expect(result.status).toBe('success');
+    if (result.status === 'success') expect(result.result).toEqual({ value: 200 });
+    expect(runs).toEqual({ approve: 1 });
   });
 });

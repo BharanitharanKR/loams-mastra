@@ -71,11 +71,24 @@ if (hasServer) {
     },
 
     resumeWorkflow: async (workflow, options: ResumeWorkflowOptions): Promise<WorkflowResult> => {
+      // A workflow built again to simulate a restart is registered with Mastra, on the
+      // same storage, before it resumes, as a restarted server registers it: a resume
+      // reads the run's snapshot from the storage of the workflow's Mastra instance, on
+      // this engine as on the default one (whose own run of the suite skips that test,
+      // resumeMapBranchCondition, for want of this registration). Mastra's addWorkflow
+      // ignores a second workflow under a known id, so the rebuilt one gets its own
+      // instance, as in Mastra's restart tests (mapping-id-determinism.test.ts).
+      if (!workflow.mastra) {
+        new Mastra({ storage, workflows: { [workflow.id]: workflow }, logger: false });
+      }
       const run = await workflow.createRun({ runId: options.runId });
       const result = await run.resume({
         step: options.step,
         label: options.label,
         resumeData: options.resumeData,
+        // Passed as the default engine's driver (packages/core/src/workflows/workflow.test.ts)
+        // passes it; @mastra/inngest's drops it and skips the foreach index tests.
+        forEachIndex: options.forEachIndex,
       } as any);
       return result as WorkflowResult;
     },

@@ -516,7 +516,14 @@ export class ResonateExecutionEngine extends DefaultExecutionEngine {
             const suspendPath: string[] = [stepName, ...(nestedMeta.path ?? [])];
             executionContext.suspendedPaths[step.id] = executionContext.executionPath;
             for (const label of Object.keys(result.resumeLabels ?? {})) {
-              executionContext.resumeLabels[label] = { stepId: step.id };
+              // As core's `suspend` records a label (handlers/step.ts): the label names the
+              // step this pass suspends at, with the iteration this pass runs in. Dropping
+              // the index made a labelled resume inside a foreach resume every suspended
+              // iteration instead of the labelled one.
+              executionContext.resumeLabels[label] = {
+                stepId: step.id,
+                foreachIndex: executionContext.foreachIndex,
+              };
             }
             await pubsub.publish(topic, {
               type: 'watch',
