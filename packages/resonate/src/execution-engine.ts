@@ -423,7 +423,10 @@ export class ResonateExecutionEngine extends DefaultExecutionEngine {
     const runId: string =
       isResume && executionContext.foreachIndex === undefined
         ? ((stepResults[step.id] as any)?.suspendPayload?.__workflow_meta?.runId ?? derivedRunId)
-        : derivedRunId;
+        : isRestart && executionContext.foreachIndex === undefined
+          ? // A restarted nested run is found under the run id its snapshot saved.
+            ((stepResults[step.id] as any)?.metadata?.nestedRunId ?? derivedRunId)
+          : derivedRunId;
 
     let nestedResume: InvocationPayload['resume'];
     if (isResume) {

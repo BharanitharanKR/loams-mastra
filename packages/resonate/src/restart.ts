@@ -44,7 +44,9 @@ export function planRestart(
       steps,
       input: snapshot.context?.input,
       runId,
-      ...(snapshot.value && Object.keys(snapshot.value).length > 0 ? { state: snapshot.value } : {}),
+      ...(snapshot.value && Object.keys(snapshot.value).length > 0
+        ? { state: snapshot.value }
+        : {}),
       ...(snapshot.stepExecutionPath ? { stepExecutionPath: snapshot.stepExecutionPath } : {}),
       ...(snapshot.resumeLabels ? { resumeLabels: snapshot.resumeLabels } : {}),
     };

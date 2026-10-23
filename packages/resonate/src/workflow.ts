@@ -695,7 +695,9 @@ export class ResonateWorkflow<
    * that cannot go ahead returns a failed result instead of throwing, so the pass
    * is not retried.
    */
-  async #prepareRestart(payload: InvocationPayload): Promise<
+  async #prepareRestart(
+    payload: InvocationPayload,
+  ): Promise<
     | { restart: RestartExecutionParams; requestContext: Record<string, unknown> }
     | { resume: NonNullable<InvocationPayload['resume']> }
     | { result: WorkflowResult<any, any, any, any> }
