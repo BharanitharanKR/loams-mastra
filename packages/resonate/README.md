@@ -72,6 +72,13 @@ the process running a workflow dies, the server hands its task to another worker
 replays the run and continues after the last completed step. No HTTP route is needed;
 workers hold a connection to the server.
 
+`run.resume()` reads the run's snapshot from the storage of the Mastra instance the
+workflow is registered with, as the default engine does. A workflow object built again
+(after a restart, say) must be registered with a Mastra instance on that storage before it
+resumes a run; registering it also makes it the workflow this process runs under its id.
+Resuming through a workflow that is not registered fails with
+`RESONATE_ENGINE_STORAGE_REQUIRED`.
+
 `init(resonate, options)`:
 
 | Option | Default | Meaning |
@@ -155,10 +162,9 @@ JSON-serialisable, as with any durable engine.
 ## Limits
 
 - Time travel and `restart` throw "not supported yet".
-- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 263 of 290
+- Mastra's workflow test utilities (vendored from `@mastra/inngest@1.10.6`): 264 of 290
   tests pass on both backends. The other failures are listed with their issues in
-  `test/conformance/expected-failures/resonate-*.json`: resuming through a workflow
-  rebuilt without Mastra, and `restart()`.
+  `test/conformance/expected-failures/resonate-*.json`: `restart()`.
 - Control-flow container spans (parallel, conditional, loop, foreach) are created outside
   memoised operations and can be exported again when a pass replays.
 - A run's promises share one deadline (`timeout`). A resume promise that times out leaves

@@ -1,5 +1,5 @@
 // Vendored from mastra-ai/mastra@6a465f9d1da730e179c44bfb4ef3e6ec398ba81f:workflows/inngest/src/run.ts (Apache-2.0). Changes: start dispatches a Resonate root promise and waits on its first pass instead of sending an Inngest event and polling storage; cancel cancels the durable promise; watch and stream are inherited from core's Run through the Mastra PubSub; resume, time travel and restart are not supported yet.
-import { getErrorFromUnknown, MastraError } from '@mastra/core/error';
+import { ErrorCategory, ErrorDomain, getErrorFromUnknown, MastraError } from '@mastra/core/error';
 import type { Mastra } from '@mastra/core/mastra';
 import { MASTRA_AUTH_TOKEN_KEY, RequestContext } from '@mastra/core/request-context';
 import type { WorkflowResult } from '@mastra/core/workflows';
@@ -41,6 +41,24 @@ function notSupported(what: string): MastraError {
     category: 'USER',
     text: `${what} is not supported by @loams/mastra-resonate yet.`,
   } as any);
+}
+
+/**
+ * A resume reads the run's snapshot from the storage of the Mastra instance the
+ * workflow is registered with, as the default engine does: a workflow object that
+ * is not registered (one built again after a restart, say) has nothing to read.
+ */
+function storageRequired(workflowId: string, runId: string, registered: boolean): MastraError {
+  const why = registered
+    ? `workflow "${workflowId}" is registered with a Mastra instance that has no workflows storage`
+    : `workflow "${workflowId}" is not registered with a Mastra instance. Register it (a workflow built again after a restart too) with Mastra, on the storage the run started with, before resuming it`;
+  return new MastraError({
+    id: 'RESONATE_ENGINE_STORAGE_REQUIRED',
+    domain: ErrorDomain.MASTRA_WORKFLOW,
+    category: ErrorCategory.USER,
+    text: `Workflow storage is required to resume run ${runId}: ${why}.`,
+    details: { workflowId, runId },
+  });
 }
 
 function isNotFound(error: unknown): boolean {
@@ -296,7 +314,7 @@ export class ResonateRun<
   }): Promise<WorkflowResult<TState, TInput, TOutput, any>> {
     const workflowsStore = await this.#mastra?.getStorage()?.getStore('workflows');
     if (!workflowsStore) {
-      throw new Error(`Workflow storage is required to resume run ${this.runId}`);
+      throw storageRequired(this.workflowId, this.runId, this.#mastra !== undefined);
     }
     // A step's suspended event is published before the snapshot that records the
     // suspension, and a caller may resume on that event (a `streamLegacy` consumer
