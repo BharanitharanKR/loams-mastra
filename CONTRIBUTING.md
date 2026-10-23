@@ -91,6 +91,16 @@ Mastra gate runs it) or a newer release, the test must pass. When `pins.json` mo
 - One change per pull request, into `main`. CI must be green.
 - Commit subjects are short present-tense sentences.
 
+## Code review
+
+Every pull request gets one AI reviewer, never two (owner, 2026-10-22). Here it is
+[CodeRabbit](https://coderabbit.ai), configured in [`.coderabbit.yaml`](.coderabbit.yaml): this
+repository's volume would use up Greptile's free credits, which go to the engine repository.
+Greptile's config in [`.greptile/`](.greptile/config.json) sets `autoReview` to `[]`, so it does
+not review here. Until the repository has 10 stars, CodeRabbit's free open-source plan does not
+review automatically: comment `@coderabbitai review` on the pull request. A maintainer reviews
+after the bot.
+
 ## Developer Certificate of Origin
 
 We use the Developer Certificate of Origin 1.1. There is no contributor licence agreement.

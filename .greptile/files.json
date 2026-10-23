@@ -1,0 +1,8 @@
+{
+  "files": [
+    {
+      "path": "CONTRIBUTING.md",
+      "description": "Licence, vendoring, dependency pinning and DCO rules"
+    }
+  ]
+}

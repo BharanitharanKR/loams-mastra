@@ -93,6 +93,10 @@ export interface ResumeRequest {
   requestContext?: Record<string, unknown>;
   actor?: unknown;
   perStep?: boolean;
+  /**
+   * Resumes only this iteration of a suspended foreach; the others stay suspended.
+   * When omitted, a `label` set by a foreach iteration names its iteration.
+   */
   forEachIndex?: number;
 }
 

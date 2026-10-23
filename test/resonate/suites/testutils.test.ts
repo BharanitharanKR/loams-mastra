@@ -76,6 +76,9 @@ if (hasServer) {
         step: options.step,
         label: options.label,
         resumeData: options.resumeData,
+        // Passed as the default engine's driver (packages/core/src/workflows/workflow.test.ts)
+        // passes it; @mastra/inngest's drops it and skips the foreach index tests.
+        forEachIndex: options.forEachIndex,
       } as any);
       return result as WorkflowResult;
     },
